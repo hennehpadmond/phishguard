@@ -11,9 +11,8 @@
     "scripting"
   ],
   "host_permissions": [
-    "http://localhost:5000/*",
-    "<all_urls>"
-  ],
+  "https://phishguard-v0qq.onrender.com/*"
+],
   "background": {
     "service_worker": "background.js"
   },
