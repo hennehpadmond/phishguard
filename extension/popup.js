@@ -1,5 +1,5 @@
 // ── PhishGuard Popup ──────────────────────────────────────────────────────────
-const API_URL = 'http://10.13.27.108:5000';
+const API_URL = "https://phishguard-v0qq.onrender.com"
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
