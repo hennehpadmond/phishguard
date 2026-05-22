@@ -1,5 +1,4 @@
-
-content = '''flask
+flask
 flask-cors
 numpy
 scikit-learn
@@ -7,7 +6,4 @@ joblib
 gunicorn
 python-dotenv
 requests
-
-'''
-open('requirements.txt', 'w').write(content)
-"
+beautifulsoup4
