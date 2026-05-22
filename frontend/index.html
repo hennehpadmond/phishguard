@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhishGuard — URL Phishing Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/style.css" />
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🛡</span>
+        <span class="logo-text">PhishGuard</span>
+      </div>
+      <nav class="nav">
+        <a href="#detector" class="nav-link">Detector</a>
+        <a href="#about"    class="nav-link">About</a>
+        <a href="#stats"    class="nav-link">Stats</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+      <span class="hero-badge">ML-Powered Detection</span>
+      <h1 class="hero-title">
+        Detect Phishing URLs<br />
+        <span class="hero-accent">Before They Strike</span>
+      </h1>
+      <p class="hero-sub">
+        Real-time phishing URL classification using Logistic Regression,
+        Support Vector Classifier, and Decision Tree algorithms trained
+        on 11,054 URLs with 32 lexical and host-based features.
+      </p>
+      <a href="#detector" class="hero-cta">Check a URL →</a>
+    </div>
+  </section>
+
+  <!-- ── DETECTOR ── -->
+  <section class="section" id="detector">
+    <div class="container">
+      <h2 class="section-title">URL Detector</h2>
+      <p class="section-sub">Start typing a URL — detection happens <strong>automatically</strong> as you type. No need to click anything.</p>
+
+      <div class="card detector-card">
+
+        <!-- Model selector -->
+        <div class="model-selector">
+          <label class="selector-label">Select Model</label>
+          <div class="model-tabs">
+            <button class="model-tab active" data-model="svm">SVC</button>
+            <button class="model-tab" data-model="logistic_regression">Logistic Regression</button>
+            <button class="model-tab" data-model="decision_tree">Decision Tree</button>
+          </div>
+        </div>
+
+        <!-- Live status indicator -->
+        <div id="liveStatusBar" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 14px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:8px;">
+          <div id="liveDot" style="width:10px;height:10px;border-radius:50%;background:#6b7280;flex-shrink:0;transition:background .3s,box-shadow .3s;"></div>
+          <span style="font-size:12px;font-weight:600;letter-spacing:.03em;" id="liveText" style="color:#6b7280;">Ready</span>
+          <span style="font-size:11px;color:#94a3b8;margin-left:auto;">Auto-detects as you type</span>
+        </div>
+
+        <!-- URL Input -->
+        <div class="input-group">
+          <input
+            type="text"
+            id="urlInput"
+            class="url-input"
+            placeholder="https://example.com/login — type and detection starts automatically"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="check-btn" id="checkBtn" onclick="checkURL()">
+            <span class="btn-text">Scan</span>
+            <span class="btn-icon">⚡</span>
+          </button>
+        </div>
+
+        <!-- Error message -->
+        <div id="errorMsg" class="error-msg" style="display:none;"></div>
+
+        <!-- Result panel -->
+        <div id="resultPanel" class="result-panel" style="display:none;">
+          <div class="result-header">
+            <div id="resultIcon"  class="result-icon"></div>
+            <div id="resultLabel" class="result-label"></div>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-stat">
+              <span class="stat-label">Confidence</span>
+              <span id="statConfidence" class="stat-value"></span>
+            </div>
+            <div class="result-stat">
+              <span class="stat-label">Model</span>
+              <span id="statModel" class="stat-value"></span>
+            </div>
+            <div class="result-stat">
+              <span class="stat-label">Latency</span>
+              <span id="statLatency" class="stat-value"></span>
+            </div>
+          </div>
+
+          <!-- Confidence bar -->
+          <div class="confidence-bar-wrap">
+            <div class="confidence-bar-bg">
+              <div id="confidenceBar" class="confidence-bar-fill"></div>
+            </div>
+            <span id="confidencePct" class="confidence-pct"></span>
+          </div>
+
+          <div id="resultUrl" class="result-url"></div>
+        </div>
+
+        <!-- Loading spinner -->
+        <div id="loadingSpinner" class="spinner-wrap" style="display:none;">
+          <div class="spinner"></div>
+          <span>Analysing URL…</span>
+        </div>
+
+      </div><!-- /card -->
+
+      <!-- Batch check -->
+      <div class="card batch-card">
+        <h3 class="card-title">Batch URL Check</h3>
+        <p class="card-sub">Paste multiple URLs, one per line (max 20).</p>
+        <textarea id="batchInput" class="batch-input" rows="5"
+                  placeholder="https://example.com&#10;https://suspicious-site.tk/login&#10;..."></textarea>
+        <button class="secondary-btn" onclick="checkBatch()">Check All URLs</button>
+        <div id="batchResults" class="batch-results"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── STATS ── -->
+  <section class="section section-dark" id="stats">
+    <div class="container">
+      <h2 class="section-title light">System Performance</h2>
+      <p class="section-sub light">Benchmark results on 11,054-URL test set.</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-value">97%+</div>
+          <div class="stat-card-label">Accuracy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value">≥0.90</div>
+          <div class="stat-card-label">F1-Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value">&lt;100ms</div>
+          <div class="stat-card-label">Latency</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value">32</div>
+          <div class="stat-card-label">Features</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value">11,054</div>
+          <div class="stat-card-label">Training URLs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value">3</div>
+          <div class="stat-card-label">ML Models</div>
+        </div>
+      </div>
+
+      <!-- Model comparison table -->
+      <div class="card table-card">
+        <h3 class="card-title">Model Comparison</h3>
+        <div class="table-wrap">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Accuracy</th>
+                <th>Precision</th>
+                <th>Recall</th>
+                <th>F1-Score</th>
+                <th>Latency</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Logistic Regression</strong></td>
+                <td>94.2%</td><td>94.1%</td><td>94.2%</td><td>94.1%</td><td>&lt;10ms</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong>SVC ★</strong></td>
+                <td>97.3%</td><td>97.2%</td><td>97.3%</td><td>97.2%</td><td>&lt;50ms</td>
+              </tr>
+              <tr>
+                <td><strong>Decision Tree</strong></td>
+                <td>95.1%</td><td>95.0%</td><td>95.1%</td><td>95.0%</td><td>&lt;5ms</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">★ Best performing model. Values are indicative; run the notebook for exact results.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── ABOUT ── -->
+  <section class="section" id="about">
+    <div class="container">
+      <h2 class="section-title">About This System</h2>
+      <div class="about-grid">
+        <div class="about-card">
+          <div class="about-icon">🔍</div>
+          <h3>URL Feature Extraction</h3>
+          <p>32 lexical and host-based features are extracted directly from the URL string in real time without external API calls.</p>
+        </div>
+        <div class="about-card">
+          <div class="about-icon">🤖</div>
+          <h3>Three ML Classifiers</h3>
+          <p>Logistic Regression, Support Vector Classifier, and Decision Tree are compared under standardized experimental conditions.</p>
+        </div>
+        <div class="about-card">
+          <div class="about-icon">⚡</div>
+          <h3>Real-Time Detection</h3>
+          <p>Classification latency below 100 ms per URL, meeting industry standards for responsive web security tools.</p>
+        </div>
+        <div class="about-card">
+          <div class="about-icon">📊</div>
+          <h3>Rigorous Evaluation</h3>
+          <p>Stratified 5-fold cross-validation, time-split validation, and Wilcoxon signed-rank test with Holm correction.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <div class="container">
+      <p>PhishGuard — Machine Learning-Based Phishing URL Detection System</p>
+      <p>Department of Information Technology and Decision Sciences | Group 25</p>
+      <p>Supervised by Dr. Michael Opoku</p>
+    </div>
+  </footer>
+
+  <script src="static/script.js"></script>
+</body>
+</html>

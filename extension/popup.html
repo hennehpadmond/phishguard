@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhishGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f172a;
+      --surface:   #1e293b;
+      --border:    #334155;
+      --safe:      #10b981;
+      --danger:    #ef4444;
+      --warn:      #f59e0b;
+      --accent:    #6366f1;
+      --text:      #f1f5f9;
+      --muted:     #94a3b8;
+      --radius:    10px;
+    }
+
+    body {
+      width: 360px;
+      min-height: 480px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+    .logo-icon { font-size: 20px; }
+
+    .toggle-wrap { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+    .toggle { position: relative; width: 38px; height: 20px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; background: var(--border);
+      border-radius: 20px; cursor: pointer; transition: background .2s;
+    }
+    .slider::before {
+      content: ''; position: absolute; width: 14px; height: 14px;
+      left: 3px; top: 3px; background: white; border-radius: 50%;
+      transition: transform .2s;
+    }
+    input:checked + .slider { background: var(--accent); }
+    input:checked + .slider::before { transform: translateX(18px); }
+
+    /* Status banner */
+    .status-banner {
+      margin: 12px 16px;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      transition: all .3s;
+    }
+    .status-banner.safe   { border-color: var(--safe);   background: rgba(16,185,129,.08); }
+    .status-banner.danger { border-color: var(--danger);  background: rgba(239,68,68,.08); }
+    .status-banner.warn   { border-color: var(--warn);    background: rgba(245,158,11,.08); }
+    .status-banner.idle   { border-color: var(--border);  }
+
+    .status-icon {
+      font-size: 28px;
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-banner.safe   .status-icon { background: rgba(16,185,129,.15); }
+    .status-banner.danger .status-icon { background: rgba(239,68,68,.15);  }
+    .status-banner.warn   .status-icon { background: rgba(245,158,11,.15); }
+
+    .status-info {}
+    .status-verdict { font-weight: 700; font-size: 14px; }
+    .status-banner.safe   .status-verdict { color: var(--safe); }
+    .status-banner.danger .status-verdict { color: var(--danger); }
+    .status-banner.warn   .status-verdict { color: var(--warn); }
+
+    .status-url {
+      font-size: 11px; color: var(--muted);
+      word-break: break-all; margin-top: 2px;
+      font-family: 'Space Mono', monospace;
+      max-height: 36px; overflow: hidden;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: flex; gap: 8px; margin: 0 16px 12px;
+    }
+    .stat-pill {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 10px; text-align: center;
+    }
+    .stat-pill .val { font-weight: 700; font-size: 14px; }
+    .stat-pill .lbl { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+    /* Confidence bar */
+    .conf-bar-wrap { margin: 0 16px 12px; }
+    .conf-bar-track {
+      height: 6px; background: var(--surface); border-radius: 99px;
+      overflow: hidden;
+    }
+    .conf-bar-fill {
+      height: 100%; border-radius: 99px;
+      background: var(--accent);
+      transition: width .4s ease;
+    }
+    .conf-label { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; justify-content: space-between; }
+
+    /* Model selector */
+    .section-label { margin: 0 16px 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .model-tabs { display: flex; gap: 6px; margin: 0 16px 12px; }
+    .model-tab {
+      flex: 1; padding: 6px 4px; font-size: 11px; font-weight: 600;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); border-radius: 6px; cursor: pointer;
+      transition: all .15s; text-align: center;
+    }
+    .model-tab:hover { border-color: var(--accent); color: var(--text); }
+    .model-tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    /* Action buttons */
+    .action-row { display: flex; gap: 8px; margin: 0 16px 14px; }
+    .btn-scan {
+      flex: 2; padding: 9px; background: var(--accent); color: white;
+      border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-scan:hover { opacity: .85; }
+    .btn-open {
+      flex: 1; padding: 9px; background: var(--surface); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px; font-size: 12px;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-open:hover { background: var(--border); }
+
+    /* History */
+    .history-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 0 16px 6px;
+    }
+    .history-header .clear-btn {
+      font-size: 11px; color: var(--muted); background: none;
+      border: none; cursor: pointer; text-decoration: underline;
+    }
+    .history-list {
+      margin: 0 8px 12px;
+      max-height: 160px;
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .history-list::-webkit-scrollbar { width: 4px; }
+    .history-list::-webkit-scrollbar-track { background: transparent; }
+    .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .hist-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 8px; border-radius: 7px;
+      background: var(--surface); border-left: 3px solid transparent;
+      cursor: default;
+    }
+    .hist-item.safe   { border-left-color: var(--safe); }
+    .hist-item.danger { border-left-color: var(--danger); }
+    .hist-dot { font-size: 12px; flex-shrink: 0; }
+    .hist-url { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hist-conf { font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .hist-item.safe   .hist-conf { color: var(--safe); }
+    .hist-item.danger .hist-conf { color: var(--danger); }
+
+    .no-history { text-align: center; color: var(--muted); font-size: 12px; padding: 20px 0; }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <span class="logo-icon">🛡</span>
+      <span>PhishGuard</span>
+    </div>
+    <div class="toggle-wrap">
+      <span id="toggleLabel">ON</span>
+      <label class="toggle">
+        <input type="checkbox" id="enableToggle" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Current URL status -->
+  <div id="statusBanner" class="status-banner idle">
+    <div class="status-icon" id="statusIcon">🛡</div>
+    <div class="status-info">
+      <div class="status-verdict" id="statusVerdict">Monitoring…</div>
+      <div class="status-url"    id="statusUrl">Navigate to any page to auto-scan</div>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row" id="statsRow" style="display:none;">
+    <div class="stat-pill">
+      <div class="val" id="statConf">—</div>
+      <div class="lbl">Confidence</div>
+    </div>
+    <div class="stat-pill">
+      <div class="val" id="statModel">—</div>
+      <div class="lbl">Model</div>
+    </div>
+    <div class="stat-pill">
+      <div class="val" id="statLatency">—</div>
+      <div class="lbl">Latency</div>
+    </div>
+  </div>
+
+  <!-- Confidence bar -->
+  <div class="conf-bar-wrap" id="confBarWrap" style="display:none;">
+    <div class="conf-bar-track">
+      <div class="conf-bar-fill" id="confBar" style="width:0%"></div>
+    </div>
+    <div class="conf-label">
+      <span>Confidence</span>
+      <span id="confPct">0%</span>
+    </div>
+  </div>
+
+  <!-- Model selector -->
+  <div class="section-label">Detection Model</div>
+  <div class="model-tabs">
+    <div class="model-tab active" data-model="svm">SVC</div>
+    <div class="model-tab"        data-model="logistic_regression">Logistic</div>
+    <div class="model-tab"        data-model="decision_tree">Decision Tree</div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="action-row">
+    <button class="btn-scan" id="scanNowBtn">⚡ Scan Current Tab</button>
+    <button class="btn-open" id="openDashBtn">Dashboard</button>
+  </div>
+
+  <!-- Backend IP Settings -->
+  <div style="margin: 0 16px 14px; padding: 10px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+    <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.05em;">Server Connection</div>
+    <div style="display: flex; gap: 6px;">
+      <input type="text" id="backendUrlInput" placeholder="http://10.13.27.108:5000" style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace; font-size: 11px;" />
+      <button id="saveBackendBtn" style="padding: 6px 10px; border-radius: 6px; border: none; background: var(--accent); color: white; font-weight: bold; cursor: pointer; font-size: 11px;">Save</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-header">
+    <div class="section-label" style="margin:0;">Recent Scans</div>
+    <button class="clear-btn" id="clearHistBtn">Clear</button>
+  </div>
+  <div class="history-list" id="historyList">
+    <div class="no-history">No scans yet — navigate to a page!</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
