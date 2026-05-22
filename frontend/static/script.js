@@ -1,5 +1,5 @@
 // Automatically use the host IP if loaded from the server, otherwise fallback to local IP
-const API = window.location.origin;
+const API_URL = window.location.origin;
 
 let selectedModel  = "svm";
 let debounceTimer  = null;
