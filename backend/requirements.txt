@@ -1,4 +1,4 @@
-python -c "
+
 content = '''flask
 flask-cors
 numpy
